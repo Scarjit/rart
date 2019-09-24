@@ -1,5 +1,5 @@
 [package]
-name = "Rart"
+name = "rart"
 version = "0.1.0"
 authors = ["Oj <oj@oojmed.com>"]
 edition = "2018"
