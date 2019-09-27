@@ -6,6 +6,21 @@ use rand::Rng;
 
 use noise::{NoiseFn, OpenSimplex};
 
+fn noise_color_hsl(noise: noise::OpenSimplex, offset_x: f64, offset_y: f64, x: f64, y: f64, color_multi: f64) -> String {
+    let color_h = (noise.get([(offset_x + x as f64) * 0.001, (offset_y + y as f64) * 0.001]) + 1.0) * color_multi;
+    let color_s = 50;
+    let color_l = 50;
+
+    return format!("hsl({}, {}%, {}%)", color_h, color_s, color_l);
+}
+
+fn rand_color_hsl(mut rng: rand::rngs::ThreadRng) -> String {
+    let color_h = rng.gen_range(0, 358);
+    let color_s = rng.gen_range(30, 70);
+    let color_l = rng.gen_range(30, 70);
+
+    return format!("hsl({}, {}%, {}%)", color_h, color_s, color_l);
+}
 
 fn polygon(start_x: i32, start_y: i32, size: f64, sides: i32, angle_offset: f64) -> element::path::Data {
     let mut data = element::path::Data::new()
@@ -22,7 +37,7 @@ fn polygon(start_x: i32, start_y: i32, size: f64, sides: i32, angle_offset: f64)
     return data;
 }
 
-fn main() {
+fn main() -> String {
     let doc_size_x = 1920;
     let doc_size_y = 1080;
 
@@ -39,7 +54,7 @@ fn main() {
 
     let max_coords = doc_size_x + doc_size_y * doc_size_y / back_size;
 
-    let color_multi = rng.gen_range(30.0, 180.0);
+    let color_multi = rng.gen_range(20.0, 160.0);
 
     for y in (0..doc_size_y).step_by(back_size) {
         for x in (0..doc_size_x).step_by(back_size) {
@@ -48,14 +63,8 @@ fn main() {
             //let data = polygon(x, y, 5.0 + 1.0, 4);
             let data = polygon(x as i32, y as i32, back_size as f64 + 1.0, back_sides, rng.gen_range(-360.0, 360.0));
 
-            let color_h = (noise.get([(offset_x + x as f64) * 0.001, (offset_y + y as f64) * 0.001]) + 1.0) * color_multi; //25.0;
-            let color_s = 50;
-            let color_l = 50;
-
-            let color_str = format!("hsl({}, {}%, {}%)", color_h, color_s, color_l);
-
             let path = element::Path::new()
-                .set("fill", color_str)
+                .set("fill", noise_color_hsl(noise, offset_x, offset_y, x as f64, y as f64, color_multi))
                 .set("stroke", "none")
                 .set("stroke-width", 0)
                 .set("d", data);
@@ -76,18 +85,12 @@ fn main() {
 
         let size = rng.gen_range(1.0, 50.0);
 
-        let color_h = rng.gen_range(0, 358);
-        let color_s = rng.gen_range(30, 70);
-        let color_l = rng.gen_range(30, 70);
-
-        let color_str = format!("hsl({}, {}%, {}%)", color_h, color_s, color_l);
-
         let sides = rng.gen_range(3, 20);
 
         let data = polygon(start_x, start_y, size, sides, 0.0);
 
         let path = element::Path::new()
-            .set("fill", color_str)
+            .set("fill", rand_color_hsl(rng))
             .set("stroke", "black")
             .set("stroke-width", 3)
             .set("d", data);
@@ -110,11 +113,13 @@ fn main() {
 
     print!("\rGenerating document (Step 3/3)");
 
-    svg::save("out.svg", &document);
+    //svg::save("out.svg", &document).unwrap();
 
     let save_string: String = rng.sample_iter(&rand::distributions::Alphanumeric)
         .take(8)
         .collect();
 
     svg::save(format!("out/{}.svg", save_string), &document);
+
+    return save_string;
 }
