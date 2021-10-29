@@ -1,4 +1,6 @@
 extern crate svg;
+
+use std::thread;
 use svg::node::element;
 
 extern crate rand;
@@ -37,11 +39,25 @@ fn polygon(start_x: i32, start_y: i32, size: f64, sides: i32, angle_offset: f64)
     return data;
 }
 
-fn main() -> String {
-    let doc_size_x = 1920;
-    let doc_size_y = 1080;
+fn main(){
+    let mut threads = vec![];
+    for _ in 0..8{
+        threads.push(thread::spawn(||{
+            for _ in 0..100 {
+                generate()
+            }
+        }))
+    }
+    for thread in threads {
+        thread.join();
+    }
+}
 
+fn generate() {
     let mut rng = rand::thread_rng();
+    let doc_size_x = rng.gen_range(10,4096);
+    let doc_size_y = rng.gen_range(10,4096);
+
     let noise = OpenSimplex::new();
 
     let mut paths = Vec::new();
@@ -119,7 +135,8 @@ fn main() -> String {
         .take(8)
         .collect();
 
-    svg::save(format!("out/{}.svg", save_string), &document);
+    svg::save(format!("C:/Users/FerdinandLinnenberg/Desktop/rart/out/{}.svg", save_string), &document);
 
-    return save_string;
+    println!("{:?}", save_string)
+    //return save_string;
 }

@@ -13,3 +13,5 @@
 # Rart output
 /out/*
 out.svg
+
+/.idea
